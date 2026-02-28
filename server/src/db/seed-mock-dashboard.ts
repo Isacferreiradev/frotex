@@ -58,18 +58,18 @@ async function seed() {
         // 3. Tools
         console.log('Creating tools...');
         const toolValues = [
-            { tenantId, categoryId: catMap['Equipamentos Pesados'], name: 'Mini Escavadeira Yanmar', brand: 'Yanmar', model: 'ViO17', dailyRate: '450.00', status: 'rented', assetTag: 'PES-001' },
-            { tenantId, categoryId: catMap['Equipamentos Pesados'], name: 'Mini Carregadeira Bobcat', brand: 'Bobcat', model: 'S450', dailyRate: '380.00', status: 'available', assetTag: 'PES-002' },
-            { tenantId, categoryId: catMap['Ferramentas Elétricas'], name: 'Martelete Demolidor Bosch', brand: 'Bosch', model: 'GSH 11 E', dailyRate: '120.00', status: 'maintenance', assetTag: 'ELE-001' },
-            { tenantId, categoryId: catMap['Ferramentas Elétricas'], name: 'Serra Circular DeWalt', brand: 'DeWalt', model: 'DWE560', dailyRate: '65.00', status: 'rented', assetTag: 'ELE-002' },
-            { tenantId, categoryId: catMap['Acesso e Elevação'], name: 'Plataforma Tesoura Haulotte', brand: 'Haulotte', model: 'Optimum 8', dailyRate: '250.00', status: 'available', assetTag: 'ELE-003' },
-            { tenantId, categoryId: catMap['Geradores e Motores'], name: 'Gerador 10kVA Toyama', brand: 'Toyama', model: 'TG12000', dailyRate: '180.00', status: 'rented', assetTag: 'GER-001' }
+            { tenantId, categoryId: catMap['Equipamentos Pesados'], name: 'Mini Escavadeira Yanmar', brand: 'Yanmar', model: 'ViO17', dailyRate: '450.00', status: 'rented' as const, assetTag: 'PES-001' },
+            { tenantId, categoryId: catMap['Equipamentos Pesados'], name: 'Mini Carregadeira Bobcat', brand: 'Bobcat', model: 'S450', dailyRate: '380.00', status: 'available' as const, assetTag: 'PES-002' },
+            { tenantId, categoryId: catMap['Ferramentas Elétricas'], name: 'Martelete Demolidor Bosch', brand: 'Bosch', model: 'GSH 11 E', dailyRate: '120.00', status: 'maintenance' as const, assetTag: 'ELE-001' },
+            { tenantId, categoryId: catMap['Ferramentas Elétricas'], name: 'Serra Circular DeWalt', brand: 'DeWalt', model: 'DWE560', dailyRate: '65.00', status: 'rented' as const, assetTag: 'ELE-002' },
+            { tenantId, categoryId: catMap['Acesso e Elevação'], name: 'Plataforma Tesoura Haulotte', brand: 'Haulotte', model: 'Optimum 8', dailyRate: '250.00', status: 'available' as const, assetTag: 'ELE-003' },
+            { tenantId, categoryId: catMap['Geradores e Motores'], name: 'Gerador 10kVA Toyama', brand: 'Toyama', model: 'TG12000', dailyRate: '180.00', status: 'rented' as const, assetTag: 'GER-001' }
         ];
 
         const insertedTools = [];
         for (const tool of toolValues) {
             if (tool.categoryId) {
-                const [t] = await db.insert(tools).values(tool).onConflictDoNothing().returning();
+                const [t] = await db.insert(tools).values(tool as any).onConflictDoNothing().returning();
                 if (t) insertedTools.push(t);
             }
         }
@@ -80,14 +80,14 @@ async function seed() {
         // 4. Customers
         console.log('Creating customers...');
         const customerValues = [
-            { tenantId, fullName: 'Construtora Horizonte', documentType: 'CNPJ', documentNumber: '11.222.333/0001-44', phoneNumber: '(11) 4004-1000', email: 'obra@horizonte.com.br' },
-            { tenantId, fullName: 'Ricardo Neves', documentType: 'CPF', documentNumber: '123.456.789-01', phoneNumber: '(11) 97777-6666', email: 'ricardo@gmail.com' },
-            { tenantId, fullName: 'Engenharia do Vale', documentType: 'CNPJ', documentNumber: '44.555.666/0001-88', phoneNumber: '(11) 3222-1111', email: 'financeiro@vale.com.br' }
+            { tenantId, fullName: 'Construtora Horizonte', documentType: 'CNPJ' as const, documentNumber: '11.222.333/0001-44', phoneNumber: '(11) 4004-1000', email: 'obra@horizonte.com.br' },
+            { tenantId, fullName: 'Ricardo Neves', documentType: 'CPF' as const, documentNumber: '123.456.789-01', phoneNumber: '(11) 97777-6666', email: 'ricardo@gmail.com' },
+            { tenantId, fullName: 'Engenharia do Vale', documentType: 'CNPJ' as const, documentNumber: '44.555.666/0001-88', phoneNumber: '(11) 3222-1111', email: 'financeiro@vale.com.br' }
         ];
 
         const insertedCustomers = [];
         for (const cust of customerValues) {
-            const [c] = await db.insert(customers).values(cust).onConflictDoNothing().returning();
+            const [c] = await db.insert(customers).values(cust as any).onConflictDoNothing().returning();
             if (c) insertedCustomers.push(c);
         }
         const allCustomers = insertedCustomers.length > 0 ? insertedCustomers : await db.query.customers.findMany({ where: (c, { eq }) => eq(c.tenantId, tenantId) });
