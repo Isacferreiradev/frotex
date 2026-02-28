@@ -1,0 +1,155 @@
+import { eq, and, ilike, or, SQL, desc } from 'drizzle-orm';
+import { db } from '../db';
+import { tools, toolCategories } from '../db/schema';
+import { AppError } from '../middleware/error.middleware';
+import { z } from 'zod';
+
+import { getPlanLimits } from '../lib/plan-limits';
+import { tenants } from '../db/schema';
+import { sql } from 'drizzle-orm';
+
+export const toolSchema = z.object({
+    categoryId: z.string().uuid('Categoria inválida'),
+    name: z.string().min(2, 'Nome obrigatório'),
+    brand: z.string().optional(),
+    model: z.string().optional(),
+    serialNumber: z.string().optional(),
+    assetTag: z.string().optional(),
+    dailyRate: z.coerce.number().min(0).default(0),
+    status: z.enum(['available', 'rented', 'maintenance', 'unavailable', 'lost', 'sold']).default('available'),
+    nextMaintenanceDueHours: z.coerce.number().optional(),
+    currentUsageHours: z.coerce.number().default(0),
+    notes: z.string().optional(),
+    acquisitionDate: z.string().optional(),
+    acquisitionCost: z.coerce.number().default(0),
+});
+
+export async function listTools(tenantId: string, filters: { status?: string; categoryId?: string; search?: string }) {
+    const conditions: SQL[] = [eq(tools.tenantId, tenantId)];
+
+    if (filters.status) {
+        conditions.push(eq(tools.status, filters.status as any));
+    }
+
+    if (filters.categoryId) {
+        conditions.push(eq(tools.categoryId, filters.categoryId));
+    }
+
+    if (filters.search) {
+        const searchPattern = `%${filters.search}%`;
+        conditions.push(or(
+            ilike(tools.name, searchPattern),
+            ilike(tools.brand, searchPattern),
+            ilike(tools.assetTag, searchPattern),
+            ilike(tools.serialNumber, searchPattern)
+        ) as SQL);
+    }
+
+    return await db
+        .select({
+            id: tools.id,
+            name: tools.name,
+            brand: tools.brand,
+            model: tools.model,
+            serialNumber: tools.serialNumber,
+            assetTag: tools.assetTag,
+            dailyRate: tools.dailyRate,
+            status: tools.status,
+            lastMaintenanceAt: tools.lastMaintenanceAt,
+            nextMaintenanceDueHours: tools.nextMaintenanceDueHours,
+            currentUsageHours: tools.currentUsageHours,
+            imageUrl: tools.imageUrl,
+            notes: tools.notes,
+            acquisitionDate: tools.acquisitionDate,
+            acquisitionCost: tools.acquisitionCost,
+            createdAt: tools.createdAt,
+            categoryId: tools.categoryId,
+            categoryName: toolCategories.name,
+        })
+        .from(tools)
+        .leftJoin(toolCategories, eq(tools.categoryId, toolCategories.id))
+        .where(and(...conditions))
+        .orderBy(desc(tools.createdAt));
+}
+
+export async function getTool(tenantId: string, id: string) {
+    const [tool] = await db
+        .select({
+            id: tools.id,
+            name: tools.name,
+            brand: tools.brand,
+            model: tools.model,
+            serialNumber: tools.serialNumber,
+            assetTag: tools.assetTag,
+            dailyRate: tools.dailyRate,
+            status: tools.status,
+            lastMaintenanceAt: tools.lastMaintenanceAt,
+            nextMaintenanceDueHours: tools.nextMaintenanceDueHours,
+            currentUsageHours: tools.currentUsageHours,
+            imageUrl: tools.imageUrl,
+            notes: tools.notes,
+            acquisitionDate: tools.acquisitionDate,
+            acquisitionCost: tools.acquisitionCost,
+            createdAt: tools.createdAt,
+            categoryId: tools.categoryId,
+            categoryName: toolCategories.name,
+        })
+        .from(tools)
+        .leftJoin(toolCategories, eq(tools.categoryId, toolCategories.id))
+        .where(and(eq(tools.tenantId, tenantId), eq(tools.id, id)));
+
+    if (!tool) throw new AppError(404, 'Ferramenta não encontrada');
+    return tool;
+}
+
+export async function createTool(tenantId: string, data: z.infer<typeof toolSchema>) {
+    // Plan enforcement
+    const [tenant] = await db.select({ plan: tenants.plan }).from(tenants).where(eq(tenants.id, tenantId));
+    const limits = getPlanLimits(tenant?.plan);
+
+    const [toolCount] = await db.select({ count: sql`count(*)` }).from(tools).where(eq(tools.tenantId, tenantId));
+    if (Number((toolCount as any).count) >= limits.maxTools) {
+        throw new AppError(403, `Limite de ferramentas atingido para o plano ${tenant?.plan || 'Essencial'} (${limits.maxTools} itens). Faça upgrade para continuar.`);
+    }
+
+    const [tool] = await db.insert(tools).values({
+        tenantId,
+        categoryId: data.categoryId,
+        name: data.name,
+        brand: data.brand,
+        model: data.model,
+        serialNumber: data.serialNumber,
+        assetTag: data.assetTag,
+        dailyRate: String(data.dailyRate),
+        status: data.status,
+        nextMaintenanceDueHours: data.nextMaintenanceDueHours ? String(data.nextMaintenanceDueHours) : null,
+        currentUsageHours: String(data.currentUsageHours),
+        notes: data.notes,
+        acquisitionDate: data.acquisitionDate,
+        acquisitionCost: String(data.acquisitionCost),
+    }).returning();
+    return tool;
+}
+
+export async function updateTool(tenantId: string, id: string, data: Partial<z.infer<typeof toolSchema>>) {
+    const [tool] = await db
+        .update(tools)
+        .set({
+            ...data,
+            dailyRate: data.dailyRate !== undefined ? String(data.dailyRate) : undefined,
+            nextMaintenanceDueHours: data.nextMaintenanceDueHours !== undefined ? String(data.nextMaintenanceDueHours) : undefined,
+            currentUsageHours: data.currentUsageHours !== undefined ? String(data.currentUsageHours) : undefined,
+            acquisitionCost: data.acquisitionCost !== undefined ? String(data.acquisitionCost) : undefined,
+            updatedAt: new Date(),
+        })
+        .where(and(eq(tools.tenantId, tenantId), eq(tools.id, id)))
+        .returning();
+    if (!tool) throw new AppError(404, 'Ferramenta não encontrada');
+    return tool;
+}
+
+export async function deleteTool(tenantId: string, id: string) {
+    const [tool] = await db.delete(tools).where(and(eq(tools.tenantId, tenantId), eq(tools.id, id))).returning();
+    if (!tool) throw new AppError(404, 'Ferramenta não encontrada');
+    return { success: true };
+}

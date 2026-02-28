@@ -1,0 +1,12 @@
+2026-02-25T22:53:57.069Z GERANDO TOKEN: 194d10bb-e2fc-43bc-ba7e-f2a72d1b4a59
+2026-02-25T22:53:57.070Z INSERT VALUES: {"tenantId":"dd7262cc-6d59-4c8d-bfe9-a5828471ad09","email":"warlkenner@gmail.com","passwordHash":"$2a$12$N2HE5pzYn9kVkrKffTjcMemdTtdUC1FWN268luZix9d13nqFCKsRG","fullName":"WENIA REIS DOS SANTOS","role":"owner","isVerified":false,"verificationToken":"194d10bb-e2fc-43bc-ba7e-f2a72d1b4a59"}
+2026-02-25T22:53:57.076Z USER RETORNADO PELO INSERT: {"id":"c3e98f49-51b0-4fe7-a750-c9899f91a932","email":"warlkenner@gmail.com","token":"194d10bb-e2fc-43bc-ba7e-f2a72d1b4a59"}
+2026-02-25T22:55:36.652Z GERANDO TOKEN: 4aad0e12-6510-44c5-bc29-c7a58ede4012
+2026-02-25T22:55:36.653Z INSERT VALUES: {"tenantId":"82065944-ab20-4687-9f82-ab7839e55ae4","email":"ferreiraisac015@gmail.com","passwordHash":"$2a$12$r.Q8zPiN.FCDI0E3P8Fx4u0/QjXjLZO5vF1lnyKkUVuOoc6C7Nlye","fullName":"WENIA REIS DOS SANTOS","role":"owner","isVerified":false,"verificationToken":"4aad0e12-6510-44c5-bc29-c7a58ede4012"}
+2026-02-25T22:55:36.657Z USER RETORNADO PELO INSERT: {"id":"f9312306-04f5-4259-a88b-243437c34f79","email":"ferreiraisac015@gmail.com","token":"4aad0e12-6510-44c5-bc29-c7a58ede4012"}
+2026-02-25T23:00:04.027Z GERANDO TOKEN: 35e5d689-e592-43a2-aa85-7da3eaf2f654
+2026-02-25T23:00:04.028Z INSERT VALUES: {"tenantId":"8397b38c-5bb1-477f-b2a9-82f38659bbf5","email":"ferreiraisac015@gmail.com","passwordHash":"$2a$12$iP0pDqQTV4jFkPF1kr0C7emWC1CvEld22hlhI7o9y4k1DHHp.yH4S","fullName":"WENIA REIS DOS SANTOS","role":"owner","isVerified":false,"verificationToken":"35e5d689-e592-43a2-aa85-7da3eaf2f654"}
+2026-02-25T23:00:04.032Z USER RETORNADO PELO INSERT: {"id":"81ee9c06-9278-46f7-ab66-d72dee02ce56","email":"ferreiraisac015@gmail.com","token":"35e5d689-e592-43a2-aa85-7da3eaf2f654"}
+2026-02-25T23:05:05.115Z GERANDO TOKEN: 2c06bcd1-2944-41b7-8b1d-365dfd663bb4
+2026-02-25T23:05:05.116Z INSERT VALUES: {"tenantId":"57ab9510-d55f-4006-8117-3378cdad7a35","email":"americaproads@gmail.com","passwordHash":"$2a$12$qg0Pfzw341nyGtEBtMawGuZ5Y8IySIYw.X9VOCSaT6XQxTcfdRrjS","fullName":"ISAC REIS FERREIRA","role":"owner","isVerified":false,"verificationToken":"2c06bcd1-2944-41b7-8b1d-365dfd663bb4"}
+2026-02-25T23:05:05.120Z USER RETORNADO PELO INSERT: {"id":"9a002c48-5a8b-46a3-a9a6-f0c01801e27b","email":"americaproads@gmail.com","token":"2c06bcd1-2944-41b7-8b1d-365dfd663bb4"}

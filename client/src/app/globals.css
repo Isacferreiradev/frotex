@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme inline {
+    /* Premium & Clean Palette - WORLD CLASS REFINEMENT */
+    --color-background: #FFFFFF;
+    --color-foreground: #1F2937;
+    /* Graphite */
+
+    --color-card: #FFFFFF;
+    --color-card-foreground: #1F2937;
+
+    --color-popover: #FFFFFF;
+    --color-popover-foreground: #1F2937;
+
+    --color-primary: #6D28D9;
+    /* Modern Deep Purple */
+    --color-primary-foreground: #FFFFFF;
+
+    --color-secondary: #F5F3FF;
+    /* Lavender */
+    --color-secondary-foreground: #6D28D9;
+
+    --color-muted: #F9FAFB;
+    --color-muted-foreground: #6B7280;
+    /* Medium Gray */
+
+    --color-accent: #F5F3FF;
+    --color-accent-foreground: #6D28D9;
+
+    --color-destructive: #EF4444;
+    --color-destructive-foreground: #F9FAFB;
+
+    --color-border: #E5E7EB;
+    /* Ice Gray - Refined */
+    --color-input: #E5E7EB;
+    --color-ring: #C4B5FD;
+
+    /* Spacing & Radius - MATHEMATICAL PRECISION */
+    --radius-premium: 16px;
+    --radius-button: 10px;
+
+    /* Shadows - Elegantly Diffuse (Nearly Invisible) */
+    --shadow-soft: 0 2px 12px rgba(109, 40, 217, 0.03);
+    --shadow-premium: 0 8px 30px rgba(0, 0, 0, 0.04);
+    --shadow-float: 0 20px 50px rgba(0, 0, 0, 0.06);
+
+    --font-jakarta: var(--font-jakarta);
+}
+
+@layer utilities {
+    .glass-v2 {
+        @apply backdrop-blur-md bg-white/70;
+        transform: translateZ(0);
+        /* GPU acceleration */
+    }
+
+    .shadow-premium {
+        box-shadow: var(--shadow-premium);
+    }
+
+    .shadow-soft {
+        box-shadow: var(--shadow-soft);
+    }
+
+    .shadow-float {
+        box-shadow: var(--shadow-float);
+    }
+
+    .card-premium {
+        @apply bg-white rounded-[12px] transition-all duration-300;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .card-premium:hover {
+        box-shadow: var(--shadow-premium);
+        transform: translateY(-1px);
+    }
+
+    .no-scrollbar {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+    color: #1F2937;
+    background-color: #FFFFFF;
+    /* High clarity dominance */
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+}
+
+@layer base {
+    * {
+        @apply border-border/40 transition-colors duration-200;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply tracking-tight font-semibold;
+    }
+}
