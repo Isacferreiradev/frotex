@@ -6,9 +6,12 @@ import logger from '../utils/logger';
 
 const pool = new Pool({
     connectionString: env.DATABASE_URL,
+    ssl: env.DATABASE_URL.includes('railway.app') || env.DATABASE_URL.includes('railway')
+        ? { rejectUnauthorized: false }
+        : false,
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000,
 });
 
 pool.on('error', (err) => {
