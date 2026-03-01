@@ -34,41 +34,54 @@ export const resetPasswordSchema = z.object({
 });
 
 export async function register(data: z.infer<typeof registerSchema>) {
-    // Check for duplicate email
-    const [existingUser] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email));
-    if (existingUser) throw new AppError(409, 'Este e-mail já está cadastrado');
-
-    // Create tenant with metadata
-    const [tenant] = await db.insert(tenants).values({
-        name: data.tenantName,
-        cnpj: data.documentNumber, // Unified document field
-        phoneNumber: data.phoneNumber,
-        address: data.address,
-    }).returning();
-
-    // Generate verification token
-    const verificationToken = uuidv4();
-
-    // Hash password and create owner user
-    const passwordHash = await bcrypt.hash(data.password, 12);
-    const [user] = await db.insert(users).values({
-        tenantId: tenant.id,
-        email: data.email,
-        passwordHash,
-        fullName: data.fullName,
-        role: 'owner',
-        isVerified: false,
-        verificationToken,
-    }).returning();
-
-    // Send verification email (optional failure)
+    console.log(`[AUTH] Iniciando registro para: ${data.email}`);
     try {
-        await sendVerificationEmail(user.email, user.fullName, verificationToken);
-    } catch (e) {
-        console.error('Email survey failed but registration continued', e);
-    }
+        // Check for duplicate email
+        const [existingUser] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email));
+        if (existingUser) {
+            console.warn(`[AUTH] Email já cadastrado: ${data.email}`);
+            throw new AppError(409, 'Este e-mail já está cadastrado');
+        }
 
-    return { user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, tenantId: tenant.id, isVerified: user.isVerified } };
+        // Create tenant
+        console.log(`[AUTH] Criando tenant: ${data.tenantName}`);
+        const [tenant] = await db.insert(tenants).values({
+            name: data.tenantName,
+            cnpj: data.documentNumber,
+            phoneNumber: data.phoneNumber,
+            address: data.address,
+        }).returning();
+
+        // Generate verification token
+        const verificationToken = uuidv4();
+
+        // Hash password and create owner user
+        console.log(`[AUTH] Criando usuário owner: ${data.email}`);
+        const passwordHash = await bcrypt.hash(data.password, 12);
+        const [user] = await db.insert(users).values({
+            tenantId: tenant.id,
+            email: data.email,
+            passwordHash,
+            fullName: data.fullName,
+            role: 'owner',
+            isVerified: false,
+            verificationToken,
+        }).returning();
+
+        // Send verification email (optional failure)
+        try {
+            console.log(`[AUTH] Enviando e-mail de verificação para: ${user.email}`);
+            await sendVerificationEmail(user.email, user.fullName, verificationToken);
+        } catch (e) {
+            console.error('[AUTH-EMAIL-ERROR] Falha ao enviar e-mail, mas registro continuou:', e);
+        }
+
+        console.log(`[AUTH] Registro concluído com sucesso: ${user.id}`);
+        return { user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, tenantId: tenant.id, isVerified: user.isVerified } };
+    } catch (error: any) {
+        console.error(`[AUTH-CRITICAL] Falha no registro para ${data.email}:`, error);
+        throw error;
+    }
 }
 
 export async function verifyEmail(token: string) {
@@ -90,46 +103,57 @@ export async function verifyEmail(token: string) {
 }
 
 export async function login(data: z.infer<typeof loginSchema>) {
-    const [user] = await db.select().from(users).where(eq(users.email, data.email));
+    console.log(`[AUTH] Tentativa de login para: ${data.email}`);
+    try {
+        const [user] = await db.select().from(users).where(eq(users.email, data.email));
 
-    if (!user) {
-        throw new AppError(401, 'Credenciais inválidas');
-    }
+        if (!user) {
+            console.warn(`[AUTH] Usuário não encontrado: ${data.email}`);
+            throw new AppError(401, 'Credenciais inválidas');
+        }
 
-    const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
-    if (!isPasswordValid) {
-        throw new AppError(401, 'Credenciais inválidas');
-    }
+        const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
+        if (!isPasswordValid) {
+            console.warn(`[AUTH] Senha inválida para: ${data.email}`);
+            throw new AppError(401, 'Credenciais inválidas');
+        }
 
-    if (!user.isVerified) {
-        throw new AppError(403, 'Por favor, verifique seu e-mail antes de fazer login');
-    }
+        if (!user.isVerified) {
+            console.warn(`[AUTH] Usuário não verificado: ${data.email}`);
+            throw new AppError(403, 'Por favor, verifique seu e-mail antes de fazer login');
+        }
 
-    const accessToken = signAccessToken({
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        tenantId: user.tenantId,
-    });
-
-    const refreshToken = signRefreshToken({ userId: user.id, tenantId: user.tenantId });
-
-    // Update last login
-    await db.update(users)
-        .set({ lastLoginAt: new Date(), lastActiveAt: new Date() })
-        .where(eq(users.id, user.id));
-
-    return {
-        user: {
-            id: user.id,
+        console.log(`[AUTH] Assinando tokens para: ${user.id}`);
+        const accessToken = signAccessToken({
+            userId: user.id,
             email: user.email,
-            fullName: user.fullName,
             role: user.role,
             tenantId: user.tenantId,
-        },
-        accessToken,
-        refreshToken,
-    };
+        });
+
+        const refreshToken = signRefreshToken({ userId: user.id, tenantId: user.tenantId });
+
+        console.log(`[AUTH] Atualizando último login...`);
+        await db.update(users)
+            .set({ lastLoginAt: new Date(), lastActiveAt: new Date() })
+            .where(eq(users.id, user.id));
+
+        console.log(`[AUTH] Login bem-sucedido: ${user.id}`);
+        return {
+            user: {
+                id: user.id,
+                email: user.email,
+                fullName: user.fullName,
+                role: user.role,
+                tenantId: user.tenantId,
+            },
+            accessToken,
+            refreshToken,
+        };
+    } catch (error: any) {
+        console.error(`[AUTH-CRITICAL] Falha no login para ${data.email}:`, error);
+        throw error;
+    }
 }
 
 export async function refreshTokens(token: string) {
