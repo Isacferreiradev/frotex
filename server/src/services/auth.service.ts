@@ -59,7 +59,6 @@ export async function register(data: z.infer<typeof registerSchema>) {
         const verificationToken = uuidv4();
 
         // Hash password and create owner user
-        console.log(`[AUTH] Criando usuário owner: ${data.email}`);
         const passwordHash = await bcrypt.hash(data.password, 12);
         const [user] = await db.insert(users).values({
             tenantId: tenant.id,
@@ -67,22 +66,16 @@ export async function register(data: z.infer<typeof registerSchema>) {
             passwordHash,
             fullName: data.fullName,
             role: 'owner',
-            isVerified: true, // Auto-verify for now to remove friction
+            isVerified: true, // Auto-verify for now
             verificationToken: null,
         }).returning();
 
-        // Send verification email (optional failure)
-        try {
-            console.log(`[AUTH] Enviando e-mail de verificação para: ${user.email}`);
-            await sendVerificationEmail(user.email, user.fullName, verificationToken);
-        } catch (e) {
-            console.error('[AUTH-EMAIL-ERROR] Falha ao enviar e-mail, mas registro continuou:', e);
-        }
+        // Send verification email in the background to avoid blocking the user
+        sendVerificationEmail(user.email, user.fullName, verificationToken)
+            .catch(e => console.error('[AUTH-EMAIL-ERROR] Background email failed:', e));
 
-        console.log(`[AUTH] Registro concluído com sucesso: ${user.id}`);
         return { user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, tenantId: tenant.id, isVerified: user.isVerified } };
     } catch (error: any) {
-        console.error(`[AUTH-CRITICAL] Falha no registro para ${data.email}:`, error);
         throw error;
     }
 }
