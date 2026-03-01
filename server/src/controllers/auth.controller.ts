@@ -3,19 +3,14 @@ import * as authService from '../services/auth.service';
 import { AppError } from '../middleware/error.middleware';
 import fs from 'fs';
 
-const CONTROLLER_LOG = 'c:\\Users\\arist\\Documents\\arquivos\\locafacil\\server\\CONTROLLER-DEBUG.log';
+// Local debug log removed for production compatibility
 
 export async function register(req: Request, res: Response, next: NextFunction) {
-    fs.appendFileSync(CONTROLLER_LOG, `${new Date().toISOString()} [CONTROLLER] Início do registro para ${req.body?.email}\n`);
     try {
-        fs.appendFileSync(CONTROLLER_LOG, `${new Date().toISOString()} [CONTROLLER] Parsing schema...\n`);
         const data = authService.registerSchema.parse(req.body);
-        fs.appendFileSync(CONTROLLER_LOG, `${new Date().toISOString()} [CONTROLLER] Chamando authService.register...\n`);
         const result = await authService.register(data);
-        fs.appendFileSync(CONTROLLER_LOG, `${new Date().toISOString()} [CONTROLLER] Sucesso! Enviando resposta 201.\n`);
         res.status(201).json({ success: true, data: result });
     } catch (err: any) {
-        fs.appendFileSync(CONTROLLER_LOG, `${new Date().toISOString()} [CONTROLLER] ERRO: ${err.message}\n`);
         next(err);
     }
 }

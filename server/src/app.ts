@@ -52,9 +52,24 @@ if (env.NODE_ENV !== 'test') {
     app.use(morgan('dev'));
 }
 
+import { pool } from './db';
+
 // Health check (Must be before general parity)
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.status(200).json({
+            status: 'ok',
+            database: 'connected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (err: any) {
+        res.status(503).json({
+            status: 'error',
+            database: 'disconnected',
+            message: err.message
+        });
+    }
 });
 
 // Webhooks (Public)
