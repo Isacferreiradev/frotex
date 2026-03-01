@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { db } from '../db';
 import { users, tenants } from '../db/schema';
@@ -36,8 +36,11 @@ export const resetPasswordSchema = z.object({
 export async function register(data: z.infer<typeof registerSchema>) {
     console.log(`[AUTH] Iniciando registro para: ${data.email}`);
     try {
-        // Check for duplicate email
-        const [existingUser] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email));
+        // Check for duplicate email (case-insensitive and trimmed)
+        const email = data.email.toLowerCase().trim();
+        const [existingUser] = await db.select({ id: users.id })
+            .from(users)
+            .where(sql`lower(${users.email}) = ${email}`);
         if (existingUser) {
             console.warn(`[AUTH] Email já cadastrado: ${data.email}`);
             throw new AppError(409, 'Este e-mail já está cadastrado');
@@ -103,9 +106,10 @@ export async function verifyEmail(token: string) {
 }
 
 export async function login(data: z.infer<typeof loginSchema>) {
-    console.log(`[AUTH] Tentativa de login para: ${data.email}`);
+    const email = data.email.toLowerCase().trim();
+    console.log(`[AUTH] Tentativa de login para: ${email}`);
     try {
-        const [user] = await db.select().from(users).where(eq(users.email, data.email));
+        const [user] = await db.select().from(users).where(sql`lower(${users.email}) = ${email}`);
 
         if (!user) {
             console.warn(`[AUTH] Usuário não encontrado: ${data.email}`);

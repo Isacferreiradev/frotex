@@ -34,13 +34,23 @@ yarn-error.log*
 !.vscode/launch.json
 !.vscode/settings.json
 
-# Screenshots & Uploads
+# Screenshots & Uploads (Ignore uploads but allow base assets)
 public/uploads/
 *.png
 *.jpg
 *.jpeg
 *.PNG
 *.JPG
+
+# Allow images in public folders
+!public/*.png
+!public/*.jpg
+!public/*.jpeg
+!public/*.PNG
+!public/*.JPG
+!client/public/*.png
+!client/public/*.jpg
+!server/src/assets/*
 
 # SQLite database
 *.sqlite
