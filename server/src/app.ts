@@ -31,16 +31,20 @@ import hpp from 'hpp';
 
 const app = express();
 
-// Security
-app.set('trust proxy', 1); // For cloud deployments (Vercel, Railway, etc.)
-app.use(helmet());
-app.use(hpp());
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
-
 // Global Rate limiting
-app.use(globalLimiter);
+// app.use(globalLimiter); // Disabled temporarily for deployment debugging
 
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+// Security
+app.set('trust proxy', 1);
+app.use(helmet({
+    contentSecurityPolicy: false,
+}));
+app.use(hpp());
+app.use(cors()); // Temporarily wide open for health checks
 
 // Stripe Webhooks & Routes (Handles raw body internally)
 app.use('/api/subscriptions', stripeRoutes);
