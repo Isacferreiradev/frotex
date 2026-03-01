@@ -7,13 +7,21 @@ import path from 'path';
 dotenv.config();
 
 async function runMigration() {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+        console.error('❌ DATABASE_URL is not defined');
+        process.exit(1);
+    }
+
+    console.log('⏳ Connecting to database for migrations...');
     const pool = new pg.Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString,
+        ssl: connectionString.includes('railway') ? { rejectUnauthorized: false } : false
     });
 
     const db = drizzle(pool);
 
-    console.log('⏳ Running migrations...');
+    console.log('⏳ Running migrations from folder:', path.join(__dirname, 'migrations'));
 
     try {
         await migrate(db, { migrationsFolder: path.join(__dirname, 'migrations') });

@@ -3,8 +3,9 @@ import { env } from './config/env';
 import { pool } from './db';
 import logger from './utils/logger';
 
-const server = app.listen(env.PORT, () => {
-    logger.info(`🚀 AlugaFácil Pro API running on http://localhost:${env.PORT}`);
+const server = app.listen(env.PORT, '0.0.0.0', () => {
+    logger.info(`🚀 AlugaFácil Pro API running on port ${env.PORT}`);
+    logger.info(`🌐 Binding: 0.0.0.0:${env.PORT}`);
     logger.info(`📊 Environment: ${env.NODE_ENV}`);
 });
 

@@ -34,10 +34,6 @@ const app = express();
 // Global Rate limiting
 // app.use(globalLimiter); // Disabled temporarily for deployment debugging
 
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-});
-
 // Security
 app.set('trust proxy', 1);
 app.use(helmet({
@@ -56,8 +52,10 @@ if (env.NODE_ENV !== 'test') {
     app.use(morgan('dev'));
 }
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+// Health check (Must be before general parity)
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Webhooks (Public)
 app.post('/api/webhooks/asaas', express.json(), webhooksCtrl.asaasWebhook);
