@@ -78,6 +78,13 @@
       "when": 1772228598841,
       "tag": "0010_odd_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772335420956,
+      "tag": "0011_strange_anthem",
+      "breakpoints": true
     }
   ]
 }
