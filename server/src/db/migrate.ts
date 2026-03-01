@@ -6,11 +6,11 @@ import path from 'path';
 
 dotenv.config();
 
-async function runMigration() {
+export async function runMigration() {
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) {
         console.error('❌ DATABASE_URL is not defined');
-        process.exit(1);
+        return;
     }
 
     console.log('⏳ Connecting to database for migrations...');
@@ -21,17 +21,27 @@ async function runMigration() {
 
     const db = drizzle(pool);
 
-    console.log('⏳ Running migrations from folder:', path.join(__dirname, 'migrations'));
+    // Look for migrations in both src and dist (production)
+    const migrationsFolder = __dirname.includes('dist')
+        ? path.join(__dirname, 'migrations')
+        : path.join(__dirname, 'migrations');
+
+    console.log('⏳ Running migrations from folder:', migrationsFolder);
 
     try {
-        await migrate(db, { migrationsFolder: path.join(__dirname, 'migrations') });
+        await migrate(db, { migrationsFolder });
         console.log('✅ Migrations completed successfully');
     } catch (error) {
         console.error('❌ Migration failed:', error);
-        process.exit(1);
+        throw error;
     } finally {
         await pool.end();
     }
 }
 
-runMigration();
+if (require.main === module) {
+    runMigration().catch(err => {
+        console.error('❌ Error seeding:', err);
+        process.exit(1);
+    });
+}
