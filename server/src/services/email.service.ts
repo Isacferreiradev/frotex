@@ -6,7 +6,7 @@ import logger from '../utils/logger';
 // Initialize transporter conditionally
 let transporter: nodemailer.Transporter | null = null;
 
-async function getTransporter() {
+async function getTransporter(): Promise<nodemailer.Transporter> {
     if (transporter) return transporter;
 
     if (env.SMTP_USER && env.SMTP_PASS) {
@@ -39,7 +39,7 @@ async function getTransporter() {
         logger.info('Using Ethereal mock email for development');
     }
 
-    return transporter;
+    return transporter as nodemailer.Transporter;
 }
 
 export async function sendVerificationEmail(email: string, fullName: string, token: string) {
