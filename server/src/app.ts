@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
+import logger from './utils/logger';
 import { authenticate } from './middleware/auth.middleware';
 import { tenantContext } from './middleware/tenant.middleware';
 import { errorHandler } from './middleware/error.middleware';
@@ -61,9 +62,17 @@ app.get('/health', async (req, res) => {
         res.status(200).json({
             status: 'ok',
             database: 'connected',
+            ssl: !env.DATABASE_URL.includes('localhost') && !env.DATABASE_URL.includes('127.0.0.1')
+                ? { rejectUnauthorized: false }
+                : false,
             timestamp: new Date().toISOString()
         });
     } catch (err: any) {
+        logger.error('❌ Healthcheck failed - Database connection error:', {
+            message: err.message,
+            code: err.code,
+            stack: err.stack
+        });
         res.status(503).json({
             status: 'error',
             database: 'disconnected',
