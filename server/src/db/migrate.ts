@@ -16,7 +16,7 @@ export async function runMigration() {
     console.log('⏳ Connecting to database for migrations...');
     const pool = new pg.Pool({
         connectionString,
-        ssl: connectionString.includes('railway') ? { rejectUnauthorized: false } : false
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
     });
 
     const db = drizzle(pool);
