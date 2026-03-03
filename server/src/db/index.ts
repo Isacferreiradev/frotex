@@ -6,7 +6,7 @@ import logger from '../utils/logger';
 
 const pool = new Pool({
     connectionString: env.DATABASE_URL,
-    ssl: env.DATABASE_URL.includes('railway.app') || env.DATABASE_URL.includes('railway')
+    ssl: env.NODE_ENV === 'production'
         ? { rejectUnauthorized: false }
         : false,
     max: 20,
